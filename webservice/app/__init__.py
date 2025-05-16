@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from webservice.app.config import Config
 from threading import Thread
-from services import mqtt_service
+from app.services import mqtt_service
 from webservice.app.services.mqtt_service import start_mqtt_service
 
 db = SQLAlchemy()

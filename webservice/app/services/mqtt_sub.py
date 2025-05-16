@@ -19,6 +19,7 @@ MQTT_TOPICS = {
     "/smartroom9000/lightcontrol": "light_control"
 }
 
+
 def on_connect(client, userdata, flags, rc):
     """Callback when client connects to MQTT broker"""
     if rc == 0:
@@ -57,6 +58,7 @@ def create_on_message(on_data: Callable[[datetime, str, float], None]) -> Callab
 
         except Exception as e:
             print(f"Error processing MQTT message: {e}")
+
     return on_message
 
 
@@ -76,11 +78,19 @@ def start_mqtt_client(host: str, port: int, on_data: Callable[[datetime, str, fl
         print(f"MQTT connection failed: {e}")
 
 
+def publish_sensor_data(host: str, port: int, sensor: str, value: float):
+    """Publish sensor data to MQTT broker"""
+    client = mqtt.Client()
+    client.connect(host, port, 60)
+    topic = f"/smartroom9000/{sensor}"
+    client.publish(topic, value)
+    client.disconnect()
+
+
 if __name__ == '__main__':
     # Example usage
     def example_on_data(timestamp: datetime, sensor: str, value: float):
         print(f"Received data: {timestamp} {sensor} {value}")
 
+
     start_mqtt_client("pi4felix.local", 1883, example_on_data)
-
-
