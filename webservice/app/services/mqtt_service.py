@@ -1,7 +1,7 @@
 import threading
 from datetime import datetime
 
-from webservice.app.models.sensors import SensorData
+from app.models.sensors import SensorData
 from smartroom_mqtt import start_mqtt_client
 
 

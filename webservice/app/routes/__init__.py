@@ -1,1 +1,1 @@
-from webservice.app.routes.main import main_bp
+from app.routes.main import main_bp
