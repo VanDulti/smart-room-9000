@@ -10,7 +10,7 @@ from paho.mqtt.client import MQTTMessage, Client
 MQTT_KEEPALIVE_INTERVAL = 5
 
 MQTT_TOPICS = {
-    "/smartroom9000/mmwave": "mmwave",
+    "/smartroom9000/motion": "motion",
     "/smartroom9000/ambientlight": "ambientlight",
     "/smartroom9000/humidity": "humidity",
     "/smartroom9000/temperature": "temperature",
