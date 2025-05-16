@@ -1,0 +1,10 @@
+Flask
+Flask-SQLAlchemy
+werkzeug
+Flask-jwt-extended 
+Flask-Bcrypt
+flask_cors
+requests
+schedule
+pandas
+paho

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Room 9000</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta http-equiv="refresh" content="30">
+</head>
+<body>
+    <div class="container">
+        <h1>Smart Room 9000</h1>
+
+        <div class="sensor-grid">
+            {% for sensor_name, sensor_data in readings.items() %}
+                <div class="sensor-card">
+                    <div class="sensor-name">{{ sensor_name }}</div>
+                    <div class="sensor-value">
+                        {% if sensor_name in ['ventilation', 'heating'] %}
+                            <span class="status-indicator {% if sensor_data.value > 0 %}status-active{% else %}status-inactive{% endif %}"></span>
+                            {% if sensor_data.value > 0 %}
+                                Active
+                            {% else %}
+                                Inactive
+                            {% endif %}
+                        {% else %}
+                            {{ "%.1f"|format(sensor_data.value) }}
+                            {% if sensor_name == 'temperature' %}°C
+                            {% elif sensor_name == 'humidity' %}%
+                            {% elif sensor_name in ['ambientlight', 'lightcontrol'] %}lux
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="sensor-time">{{ sensor_data.timestamp }}</div>
+                </div>
+            {% else %}
+                <div class="no-data">No sensor data available yet.</div>
+            {% endfor %}
+        </div>
+
+        <a href="{{ url_for('main.index') }}">
+            <button class="refresh-btn">Refresh Data</button>
+        </a>
+
+        <footer>
+            <p>Auto-refreshes every 30 seconds | Last updated: {{ current_time }}</p>
+        </footer>
+    </div>
+</body>
+</html>
