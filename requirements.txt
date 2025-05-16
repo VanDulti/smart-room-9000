@@ -7,4 +7,4 @@ flask_cors
 requests
 schedule
 pandas
-paho
+paho_mqtt

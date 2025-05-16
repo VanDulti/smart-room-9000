@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import paho.mqtt.client as mqtt
 import logging
 
@@ -46,9 +48,14 @@ mqttc.on_message = on_message
 try:
     # Connect to MQTT Broker
     mqttc.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
-    
+
     # Start the network loop
     mqttc.loop_forever()
 
 except Exception as e:
     logging.error(f"MQTT Error: {e}")
+
+
+
+def store_measurement(timestamp: datetime, sensor: str, value: str):
+    print(f'storing in db: {timestamp} {sensor} {value}')

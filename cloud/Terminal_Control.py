@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import paho.mqtt.client as mqtt
 import time
 
@@ -44,3 +46,7 @@ def main():
 if __name__ == "__main__":
     print("Listening for LED status updates...")
     main()
+
+
+def store_measurement(timestamp: datetime, sensor: str, value: str):
+    print(f'storing in db: {timestamp} {sensor} {value}')
