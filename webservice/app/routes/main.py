@@ -1,6 +1,6 @@
 # app/routes/main.py
 from flask import Blueprint, render_template, jsonify, request
-from app.models.sensors import SensorData
+from webservice.app.models.sensors import SensorData
 from sqlalchemy import desc
 from datetime import datetime, timedelta
 import time

@@ -3,9 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
-from app.config import Config
+from webservice.app.config import Config
 from threading import Thread
-from services import start_mqtt_client
+from services import mqtt_service
+from webservice.app.services.mqtt_service import start_mqtt_service
+
 db = SQLAlchemy()
 jwt = JWTManager()
 bcrypt = Bcrypt()
@@ -16,7 +18,7 @@ def create_app(config_class=Config):
 
     CORS(app)
     db.init_app(app)
-    #start_mqtt_client(app)
+    start_mqtt_service(app)
 
     from app.routes import main_bp
     app.register_blueprint(main_bp)
