@@ -13,7 +13,7 @@ main_bp = Blueprint('main', __name__)
 def index():
     latest_readings = {}
 
-    for topic in topics:
+    for topic in services.mqtt_service.MQTT_TOPICS:
         data = SensorData.query.filter_by(topic=topic).order_by(desc(SensorData.timestamp)).first()
         if data:
             sensor_name = topic.split('/')[-1]
