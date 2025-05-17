@@ -1,5 +1,5 @@
 # app/models/sensors.py
-from app import db
+from webservice.app import db
 from datetime import datetime
 
 

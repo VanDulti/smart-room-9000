@@ -1,17 +1,12 @@
-import threading
-from datetime import datetime
-
-from app.config import Config
-from app.smartroom_mqtt import start_mqtt_client
+from webservice.app.config import Config
+from webservice.app.smartroom_mqtt import start_mqtt_client
 from flask import Flask
-from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+import threading
 
 db = SQLAlchemy()
-jwt = JWTManager()
-bcrypt = Bcrypt()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -19,13 +14,16 @@ def create_app(config_class=Config):
 
     CORS(app)
     db.init_app(app)
-    start_mqtt_service(app)
 
-    from app.routes import main_bp
+    from webservice.app.routes import main_bp
     app.register_blueprint(main_bp)
 
     with app.app_context():
         db.create_all()
+
+    from webservice.app.services.mqtt_service import start_mqtt_service
+    start_mqtt_service(app)
+
 
     return app
 

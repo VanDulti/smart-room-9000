@@ -1,218 +1,175 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>Sensor Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Room 9000</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <meta http-equiv="refresh" content="30">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+            gap: 20px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        @media (max-width: 600px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Smart Room 9000</h1>
+    <h1>Sensor Dashboard</h1>
 
-        <!-- Current readings section -->
-        <div class="sensor-grid">
-            {% for sensor_name, sensor_data in readings.items() %}
-                <div class="sensor-card">
-                    <div class="sensor-name">{{ sensor_name }}</div>
-                    <div class="sensor-value">
-                        {% if sensor_name in ['ventilation', 'heating'] %}
-                            <span class="status-indicator {% if sensor_data.value > 0 %}status-active{% else %}status-inactive{% endif %}"></span>
-                            {% if sensor_data.value > 0 %}
-                                Active
-                            {% else %}
-                                Inactive
-                            {% endif %}
-                        {% else %}
-                            {{ "%.1f"|format(sensor_data.value) }}
-                            {% if sensor_name == 'temperature' %}°C
-                            {% elif sensor_name == 'humidity' %}%
-                            {% elif sensor_name in ['brightness', 'light_control'] %}lux
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                    <div class="sensor-time">{{ sensor_data.timestamp }}</div>
-                </div>
-            {% else %}
-                <div class="no-data">No sensor data available yet.</div>
-            {% endfor %}
+    <div class="dashboard">
+        {% for topic in topics %}
+        <div class="chart-container">
+            <h2>{{ topic|title }}</h2>
+            <canvas id="chart-{{ topic }}"></canvas>
         </div>
-
-        <!-- Charts section -->
-        <div class="charts-section">
-            <h2>Sensor Diagrams</h2>
-
-            <div class="dashboard-grid">
-                {% for sensor_name in readings.keys() %}
-                <div class="chart-card">
-                    <div class="chart-title">{{ sensor_name }}</div>
-                    <div class="chart-container">
-                        <canvas id="chart-{{ sensor_name }}"></canvas>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <a href="{{ url_for('main.index') }}">
-            <button class="refresh-btn">Refresh Data</button>
-        </a>
-
-        <footer>
-            <p>Auto-refreshes every 30 seconds | Last updated: {{ current_time }}</p>
-        </footer>
+        {% endfor %}
     </div>
 
     <script>
-        // Store topic configurations for units, colors, etc.
-        const topicConfig = {
-            'motion': {
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                yAxisMax: 1.1,
-                yAxisMin: -0.1,
-                stepSize: 1,
-                unit: ''
-            },
-            'brightness': {
-                borderColor: 'rgb(255, 159, 64)',
-                backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                yAxisMin: 0,
-                unit: 'lux'
-            },
-            'humidity': {
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                yAxisMin: 0,
-                yAxisMax: 100,
-                unit: '%'
-            },
-            'temperature': {
-                borderColor: 'rgb(255, 205, 86)',
-                backgroundColor: 'rgba(255, 205, 86, 0.2)',
-                yAxisMin: 15,
-                yAxisMax: 30,
-                unit: '°C'
-            },
-            'ventilation': {
-                borderColor: 'rgb(54, 162, 235)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                yAxisMin: -0.1,
-                yAxisMax: 5.1,
-                stepSize: 1,
-                unit: ''
-            },
-            'heating': {
-                borderColor: 'rgb(153, 102, 255)',
-                backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                yAxisMin: -0.1,
-                yAxisMax: 5.1,
-                stepSize: 1,
-                unit: ''
-            },
-            'light_control': {
-                borderColor: 'rgb(201, 203, 207)',
-                backgroundColor: 'rgba(201, 203, 207, 0.2)',
-                yAxisMin: -0.1,
-                yAxisMax: 1.1,
-                stepSize: 0.2,
-                unit: ''
-            }
-        };
-
-        // Sensor data from server
-        const sensorData = {
-            {% for topic, data in sensor_data.items() %}
-            '{{ topic }}': {
-                timestamps: {{ data.timestamps|tojson }},
-                values: {{ data.values|tojson }}
-            },
-            {% endfor %}
-        };
-
-        // Initialize all charts on page load
         document.addEventListener('DOMContentLoaded', function() {
-            {% for sensor_name in readings.keys() %}
-                createChart('{{ sensor_name }}');
+            // Get sensor data passed from Flask
+            const sensorData = {{ sensor_data|tojson }};
+
+            // Create charts for each topic
+            {% for topic in topics %}
+                createChart('{{ topic }}');
             {% endfor %}
-        });
 
-        // Create a chart for a sensor
-        function createChart(topic) {
-            if (!document.getElementById(`chart-${topic}`)) return;
+            function createChart(topic) {
+                const data = sensorData[topic];
 
-            const ctx = document.getElementById(`chart-${topic}`).getContext('2d');
-            const config = topicConfig[topic] || {
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                unit: ''
-            };
+                // If no data, display message
+                if (!data || data.length === 0) {
+                    document.getElementById('chart-' + topic).insertAdjacentHTML('afterend',
+                        '<p>No data available for this sensor.</p>');
+                    return;
+                }
 
-            // Format timestamps for display
-            let labels = [];
-            if (sensorData[topic] && sensorData[topic].timestamps) {
-                labels = sensorData[topic].timestamps.map(timestamp => {
-                    const date = new Date(timestamp);
-                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                });
-            }
+                // Reverse the data to show chronological order (oldest to newest)
+                const chartData = data.reverse();
 
-            // Get values
-            let values = [];
-            if (sensorData[topic] && sensorData[topic].values) {
-                values = sensorData[topic].values;
-            }
+                // Extract timestamps and values
+                const timestamps = chartData.map(item => item.timestamp);
+                const values = chartData.map(item => item.value);
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `${topic.charAt(0).toUpperCase() + topic.slice(1)}`,
-                        data: values,
-                        borderColor: config.borderColor,
-                        backgroundColor: config.backgroundColor,
-                        borderWidth: 2,
-                        tension: 0.3,
-                        pointRadius: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: config.yAxisMin === undefined,
-                            min: config.yAxisMin,
-                            max: config.yAxisMax,
-                            ticks: {
-                                stepSize: config.stepSize,
-                                callback: function(value) {
-                                    return value + config.unit;
+                // Get chart context
+                const ctx = document.getElementById('chart-' + topic).getContext('2d');
+
+                // Set chart color based on topic
+                let borderColor, backgroundColor;
+                switch(topic) {
+                    case 'temperature':
+                        borderColor = 'rgb(255, 99, 132)';
+                        backgroundColor = 'rgba(255, 99, 132, 0.2)';
+                        break;
+                    case 'humidity':
+                        borderColor = 'rgb(54, 162, 235)';
+                        backgroundColor = 'rgba(54, 162, 235, 0.2)';
+                        break;
+                    case 'mmwave':
+                        borderColor = 'rgb(255, 159, 64)';
+                        backgroundColor = 'rgba(255, 159, 64, 0.2)';
+                        break;
+                    case 'ambientlight':
+                        borderColor = 'rgb(255, 205, 86)';
+                        backgroundColor = 'rgba(255, 205, 86, 0.2)';
+                        break;
+                    case 'ventilation':
+                        borderColor = 'rgb(75, 192, 192)';
+                        backgroundColor = 'rgba(75, 192, 192, 0.2)';
+                        break;
+                    case 'heating':
+                        borderColor = 'rgb(153, 102, 255)';
+                        backgroundColor = 'rgba(153, 102, 255, 0.2)';
+                        break;
+                    case 'light_control':
+                        borderColor = 'rgb(201, 203, 207)';
+                        backgroundColor = 'rgba(201, 203, 207, 0.2)';
+                        break;
+                    default:
+                        borderColor = 'rgb(75, 192, 192)';
+                        backgroundColor = 'rgba(75, 192, 192, 0.2)';
+                }
+
+                // Create the chart
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: timestamps,
+                        datasets: [{
+                            label: topic,
+                            data: values,
+                            borderColor: borderColor,
+                            backgroundColor: backgroundColor,
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                },
+                                ticks: {
+                                    maxTicksLimit: 8,
+                                    maxRotation: 45,
+                                    minRotation: 0
                                 }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                },
+                                beginAtZero: topic !== 'temperature' // Only start from zero for non-temperature data
                             }
                         },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.parsed.y}${config.unit}`;
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw}`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
+        });
     </script>
 </body>
 </html>

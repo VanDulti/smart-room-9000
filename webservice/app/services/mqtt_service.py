@@ -1,7 +1,5 @@
 import threading
 from datetime import datetime
-
-from app.models.sensors import SensorData
 from smartroom_mqtt import start_mqtt_client
 
 
@@ -19,6 +17,7 @@ def start_mqtt_service(app):
 
 def store_measurement(app, timestamp: datetime, sensor: str, value: float):
     print(f'storing in db: {timestamp} {sensor} {value}')
+    from webservice.app.models.sensors import SensorData
     sensor_data = SensorData(timestamp=timestamp, topic=sensor, value=value)
     with app.app_context():
         app.db.session.add(sensor_data)
